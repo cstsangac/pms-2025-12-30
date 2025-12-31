@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Portfolio Service Routes
+        - id: portfolio-service
+          uri: http://portfolio-service:8081
+          predicates:
+            - Path=/api/portfolio/**
+          filters:
+            - RewritePath=/api/portfolio/(?<segment>.*), /api/portfolio/${segment}
+            - name: CircuitBreaker
+              args:
+                name: portfolioCircuitBreaker
+                fallbackUri: forward:/fallback/portfolio
+
+        # Transaction Service Routes
+        - id: transaction-service
+          uri: http://transaction-service:8082
+          predicates:
+            - Path=/api/transaction/**
+          filters:
+            - RewritePath=/api/transaction/(?<segment>.*), /api/transaction/${segment}
+            - name: CircuitBreaker
+              args:
+                name: transactionCircuitBreaker
+                fallbackUri: forward:/fallback/transaction
+
+        # Notification Service Routes
+        - id: notification-service
+          uri: http://notification-service:8083
+          predicates:
+            - Path=/api/notification/**
+          filters:
+            - RewritePath=/api/notification/(?<segment>.*), /api/notification/${segment}
+
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,GATEWAY_TIMEOUT
+            methods: GET,POST,PUT,DELETE
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+              factor: 2
+              basedOnPreviousValue: false
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Content-Type
+              - Authorization
+            maxAge: 3600
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO

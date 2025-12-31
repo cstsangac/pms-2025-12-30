@@ -1,0 +1,195 @@
+services:
+  # MongoDB for Portfolio Service
+  mongodb-portfolio:
+    image: mongo:7.0
+    container_name: mongodb-portfolio
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: portfolio_db
+    volumes:
+      - mongodb-portfolio-data:/data/db
+    networks:
+      - pms-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/portfolio_db --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB for Transaction Service
+  mongodb-transaction:
+    image: mongo:7.0
+    container_name: mongodb-transaction
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: transaction_db
+    volumes:
+      - mongodb-transaction-data:/data/db
+    networks:
+      - pms-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/transaction_db --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Caching
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pms-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - pms-network
+    healthcheck:
+      test: nc -z localhost 2181 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - pms-network
+    healthcheck:
+      test: kafka-broker-api-versions --bootstrap-server localhost:9092
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Portfolio Service
+  portfolio-service:
+    build:
+      context: .
+      dockerfile: ./portfolio-service/Dockerfile
+    container_name: portfolio-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-portfolio:27017/portfolio_db
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      mongodb-portfolio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pms-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/portfolio/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Transaction Service
+  transaction-service:
+    build:
+      context: .
+      dockerfile: ./transaction-service/Dockerfile
+    container_name: transaction-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb-transaction:27017/transaction_db
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      mongodb-transaction:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - pms-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/api/transaction/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: ./notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - pms-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/api/notification/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - portfolio-service
+      - transaction-service
+      - notification-service
+    networks:
+      - pms-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  pms-network:
+    driver: bridge
+
+volumes:
+  mongodb-portfolio-data:
+  mongodb-transaction-data:
+  redis-data:

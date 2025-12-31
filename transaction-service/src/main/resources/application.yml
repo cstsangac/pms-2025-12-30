@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: transaction-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/transaction_db
+      auto-index-creation: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: transaction-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+server:
+  port: 8082
+  servlet:
+    context-path: /api/transaction
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.wealthmanagement: DEBUG
+    org.springframework.kafka: INFO
+
+app:
+  kafka:
+    topics:
+      transaction-events: transaction-events
+      portfolio-events: portfolio-events
