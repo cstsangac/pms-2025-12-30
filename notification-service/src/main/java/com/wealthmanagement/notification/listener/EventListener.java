@@ -18,6 +18,16 @@ public class EventListener {
 
     private final NotificationService notificationService;
 
+    /**
+     * WARNING: This consumer does NOT implement idempotency!
+     * Duplicate events (due to Kafka's at-least-once delivery) will be processed multiple times.
+     * This can result in duplicate notifications being sent to clients.
+     * 
+     * TODO for Production:
+     * - Track processed event IDs using Redis or database
+     * - Check if event already processed before sending notification
+     * - Use event.getPortfolioId() + event.getTimestamp() or UUID as deduplication key
+     */
     @KafkaListener(topics = "${app.kafka.topics.portfolio-events}", groupId = "${spring.kafka.consumer.group-id}")
     public void handlePortfolioEvent(
             @Payload PortfolioEvent event,
@@ -38,6 +48,16 @@ public class EventListener {
         }
     }
 
+    /**
+     * WARNING: This consumer does NOT implement idempotency!
+     * Duplicate events (due to Kafka's at-least-once delivery) will be processed multiple times.
+     * This can result in duplicate notifications being sent to clients.
+     * 
+     * TODO for Production:
+     * - Track processed event IDs using Redis or database
+     * - Check if event already processed before sending notification
+     * - Use event.getTransactionId() as deduplication key
+     */
     @KafkaListener(topics = "${app.kafka.topics.transaction-events}", groupId = "${spring.kafka.consumer.group-id}")
     public void handleTransactionEvent(
             @Payload TransactionEvent event,
