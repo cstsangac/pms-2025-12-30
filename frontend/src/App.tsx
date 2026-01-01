@@ -61,6 +61,85 @@ function App() {
   const [backendHealthy, setBackendHealthy] = useState(false);
   const [lastApiCall, setLastApiCall] = useState<string>('');
 
+  // Mock data state
+  const [mockPortfolios, setMockPortfolios] = useState<Portfolio[]>([
+    {
+      id: 'mock-1',
+      clientName: 'John Doe',
+      accountNumber: 'ACC12345',
+      totalValue: 150000,
+      cashBalance: 25000,
+      holdingsCount: 2,
+      status: 'ACTIVE',
+    },
+    {
+      id: 'mock-2',
+      clientName: 'Jane Smith',
+      accountNumber: 'ACC67890',
+      totalValue: 280000,
+      cashBalance: 50000,
+      holdingsCount: 1,
+      status: 'ACTIVE',
+    },
+  ]);
+  const [expandedMockPortfolioId, setExpandedMockPortfolioId] = useState<string | null>(null);
+  const [mockPortfolioDetails] = useState<Map<string, PortfolioDetail>>(new Map([
+    ['mock-1', {
+      id: 'mock-1',
+      clientName: 'John Doe',
+      accountNumber: 'ACC12345',
+      totalValue: 150000,
+      cashBalance: 25000,
+      status: 'ACTIVE',
+      holdings: [
+        {
+          symbol: 'AAPL',
+          name: 'Apple Inc.',
+          assetType: 'STOCK',
+          quantity: 100,
+          averageCost: 150,
+          currentPrice: 185,
+          marketValue: 18500,
+          unrealizedGainLoss: 3500,
+          unrealizedGainLossPercentage: 23.33,
+        },
+        {
+          symbol: 'GOOGL',
+          name: 'Alphabet Inc.',
+          assetType: 'STOCK',
+          quantity: 50,
+          averageCost: 120,
+          currentPrice: 140,
+          marketValue: 7000,
+          unrealizedGainLoss: 1000,
+          unrealizedGainLossPercentage: 16.67,
+        },
+      ],
+    }],
+    ['mock-2', {
+      id: 'mock-2',
+      clientName: 'Jane Smith',
+      accountNumber: 'ACC67890',
+      totalValue: 280000,
+      cashBalance: 50000,
+      status: 'ACTIVE',
+      holdings: [
+        {
+          symbol: 'MSFT',
+          name: 'Microsoft Corp.',
+          assetType: 'STOCK',
+          quantity: 200,
+          averageCost: 350,
+          currentPrice: 380,
+          marketValue: 76000,
+          unrealizedGainLoss: 6000,
+          unrealizedGainLossPercentage: 8.57,
+        },
+      ],
+    }],
+  ]));
+  const [mockDemoStatus, setMockDemoStatus] = useState<string>('');
+
   useEffect(() => {
     loadPortfolios();
   }, []);
@@ -180,6 +259,82 @@ function App() {
     }
   };
 
+  const createRandomMockPortfolio = () => {
+    try {
+      setMockDemoStatus('Creating random portfolio...');
+      
+      // Generate random client
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const clientName = `${firstName} ${lastName}`;
+      const accountNumber = `ACC${Math.floor(Math.random() * 90000 + 10000)}`;
+      const initialCash = Math.floor(Math.random() * 400000 + 100000);
+      
+      // Select random stocks
+      const numHoldings = 3 + Math.floor(Math.random() * 4);
+      const shuffled = [...stocks].sort(() => 0.5 - Math.random());
+      const selectedStocks = shuffled.slice(0, numHoldings);
+      
+      const holdings = selectedStocks.map(stock => {
+        const quantity = Math.floor(Math.random() * 150 + 25);
+        const priceVariation = (Math.random() * 0.3 - 0.15);
+        const avgCost = stock.basePrice * (1 + priceVariation);
+        const currentPrice = stock.basePrice * (1 + (Math.random() * 0.2 - 0.1));
+        const marketValue = quantity * currentPrice;
+        const unrealizedGainLoss = marketValue - (quantity * avgCost);
+        const unrealizedGainLossPercentage = (unrealizedGainLoss / (quantity * avgCost)) * 100;
+        
+        return {
+          symbol: stock.symbol,
+          name: stock.name,
+          assetType: 'STOCK',
+          quantity,
+          averageCost: parseFloat(avgCost.toFixed(2)),
+          currentPrice: parseFloat(currentPrice.toFixed(2)),
+          marketValue: parseFloat(marketValue.toFixed(2)),
+          unrealizedGainLoss: parseFloat(unrealizedGainLoss.toFixed(2)),
+          unrealizedGainLossPercentage: parseFloat(unrealizedGainLossPercentage.toFixed(2)),
+        };
+      });
+      
+      const holdingsValue = holdings.reduce((sum, h) => sum + h.marketValue, 0);
+      const newPortfolio: Portfolio = {
+        id: `mock-${Date.now()}`,
+        clientName,
+        accountNumber,
+        totalValue: initialCash + holdingsValue,
+        cashBalance: initialCash,
+        holdingsCount: holdings.length,
+        status: 'ACTIVE',
+      };
+      
+      setMockPortfolios(prev => [...prev, newPortfolio]);
+      setMockDemoStatus(`✅ Successfully created portfolio for ${clientName} with ${numHoldings} holdings!`);
+      
+      setTimeout(() => setMockDemoStatus(''), 5000);
+    } catch (err: any) {
+      setMockDemoStatus(`❌ Error: ${err.message}`);
+      setTimeout(() => setMockDemoStatus(''), 5000);
+    }
+  };
+
+  const calculateMockTotals = () => {
+    const totalValue = mockPortfolios.reduce((sum, p) => sum + p.totalValue, 0);
+    const totalCash = mockPortfolios.reduce((sum, p) => sum + p.cashBalance, 0);
+    const totalHoldings = mockPortfolios.reduce((sum, p) => sum + (p.holdingsCount || 0), 0);
+    return { totalValue, totalCash, totalHoldings };
+  };
+
+  const toggleMockPortfolioExpansion = (portfolioId: string) => {
+    if (expandedMockPortfolioId === portfolioId) {
+      setExpandedMockPortfolioId(null);
+    } else {
+      setExpandedMockPortfolioId(portfolioId);
+    }
+  };
+
+  const mockTotals = calculateMockTotals();
+
   if (loading) {
     return (
       <div className="app">
@@ -234,6 +389,22 @@ function App() {
         {error && (
           <div className="error">
             {error}
+            <button 
+              onClick={() => document.getElementById('mock-demo')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{ 
+                marginTop: '1rem', 
+                padding: '0.75rem 1.5rem', 
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+                fontWeight: '500'
+              }}
+            >
+              ↓ Try Mock Demo (No Backend Required)
+            </button>
           </div>
         )}
 
@@ -386,7 +557,7 @@ function App() {
           </div>
         </div>
 
-        {/* System Status Section */}
+        {/* Backend System Status Section */}
         <div className="system-status-section">
           <h2>🔧 Backend System Status</h2>
           <p className="status-subtitle">Real-time monitoring of microservices architecture</p>
@@ -524,8 +695,164 @@ function App() {
           </div>
 
           <div className="verification-note">
-            💡 <strong>Not a Mock!</strong> All data is fetched from real backend microservices. 
+            💡 <strong>Live Backend!</strong> All data above is fetched from real backend microservices. 
             Check browser DevTools Network tab to see actual API calls to <code>localhost:8080</code>
+          </div>
+        </div>
+
+        {/* Mock Frontend Demo Section */}
+        <div id="mock-demo" className="system-status-section" style={{ marginTop: '3rem', background: '#fffbf0' }}>
+          <h2>📋 Mock Frontend Demo</h2>
+          <p className="status-subtitle">Standalone frontend demo using mock data (no backend required)</p>
+          
+          <div className="verification-note" style={{ background: '#fff3cd', borderColor: '#ffc107', color: '#856404', marginBottom: '2rem' }}>
+            ℹ️ <strong>Mock Data Active:</strong> This section below uses mock data and works without a backend. 
+            To see the real backend microservices, check the "Backend System Status" section above or run <code>docker compose up</code>.
+          </div>
+
+          {/* Mock Totals Dashboard */}
+          <div className="dashboard-grid">
+            <div className="card">
+              <h2>Total Portfolio Value</h2>
+              <div className="card-value">${mockTotals.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+              <div className="card-label">Across {mockPortfolios.length} portfolio(s)</div>
+            </div>
+
+            <div className="card">
+              <h2>Total Cash Balance</h2>
+              <div className="card-value">${mockTotals.totalCash.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+              <div className="card-label">Available for investment</div>
+            </div>
+
+            <div className="card">
+              <h2>Total Holdings</h2>
+              <div className="card-value">{mockTotals.totalHoldings}</div>
+              <div className="card-label">Positions across all portfolios</div>
+            </div>
+          </div>
+
+          {/* Mock Client Portfolios */}
+          <div className="section">
+            <h2>Mock Client Portfolios</h2>
+            <p style={{ marginBottom: '1rem', color: '#64748b' }}>Click on any row to view holdings (Mock Data)</p>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Client Name</th>
+                  <th>Account Number</th>
+                  <th>Total Value</th>
+                  <th>Cash Balance</th>
+                  <th>Holdings</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockPortfolios.map((portfolio) => (
+                  <React.Fragment key={portfolio.id}>
+                    <tr 
+                      className={`portfolio-row ${expandedMockPortfolioId === portfolio.id ? 'expanded' : ''}`}
+                      onClick={() => toggleMockPortfolioExpansion(portfolio.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td className="expand-icon">
+                        {expandedMockPortfolioId === portfolio.id ? '▼' : '▶'}
+                      </td>
+                      <td>{portfolio.clientName}</td>
+                      <td>{portfolio.accountNumber}</td>
+                      <td>${portfolio.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td>${portfolio.cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td>{portfolio.holdingsCount || 0}</td>
+                      <td>
+                        <span className={`status-badge status-${portfolio.status.toLowerCase()}`}>
+                          {portfolio.status}
+                        </span>
+                      </td>
+                    </tr>
+                    
+                    {expandedMockPortfolioId === portfolio.id && (
+                      <tr className="holdings-row">
+                        <td colSpan={7}>
+                          <div className="holdings-container">
+                            {(mockPortfolioDetails.get(portfolio.id)?.holdings?.length ?? 0) > 0 ? (
+                              <>
+                                <h3>Holdings</h3>
+                                <table className="holdings-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Symbol</th>
+                                      <th>Name</th>
+                                      <th>Type</th>
+                                      <th>Quantity</th>
+                                      <th>Avg Cost</th>
+                                      <th>Current Price</th>
+                                      <th>Market Value</th>
+                                      <th>Gain/Loss</th>
+                                      <th>Gain/Loss %</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {mockPortfolioDetails.get(portfolio.id)?.holdings.map((holding, idx) => (
+                                      <tr key={idx}>
+                                        <td className="holding-symbol">{holding.symbol}</td>
+                                        <td>{holding.name || '-'}</td>
+                                        <td>{holding.assetType}</td>
+                                        <td>{holding.quantity}</td>
+                                        <td>${holding.averageCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                        <td>${holding.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                        <td>${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                        <td className={holding.unrealizedGainLoss >= 0 ? 'gain' : 'loss'}>
+                                          ${holding.unrealizedGainLoss.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className={holding.unrealizedGainLossPercentage >= 0 ? 'gain' : 'loss'}>
+                                          {holding.unrealizedGainLossPercentage.toFixed(2)}%
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </>
+                            ) : (
+                              <div className="no-holdings">No holdings in this portfolio</div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mock Interactive Demo */}
+          <div className="demo-section">
+            <h2>🎮 Mock Interactive Demo</h2>
+            <p>Click the button below to create a mock portfolio with random data (no backend needed).</p>
+            <div className="demo-controls">
+              <button 
+                className="demo-button"
+                onClick={createRandomMockPortfolio}
+                disabled={mockDemoStatus !== ''}
+              >
+                🎲 Create Random Mock Portfolio
+              </button>
+              {mockDemoStatus && (
+                <div className={`demo-status ${mockDemoStatus.includes('✅') ? 'success' : mockDemoStatus.includes('❌') ? 'error' : 'loading'}`}>
+                  {mockDemoStatus}
+                </div>
+              )}
+            </div>
+            <div className="demo-info">
+              <h3>What happens when you click:</h3>
+              <ul>
+                <li>✨ Random client name is generated (e.g., "Sarah Johnson")</li>
+                <li>💰 Random initial balance between $100K - $500K</li>
+                <li>📊 3-6 random stock holdings are added</li>
+                <li>📈 Market prices are simulated with realistic variations</li>
+                <li>🔄 Portfolio appears in the mock table above - click to expand!</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
