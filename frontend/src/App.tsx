@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './index.css';
-import { portfolioService, transactionService } from './services/api';
+import { portfolioService } from './services/api';
 import axios from 'axios';
 
 interface Holding {
@@ -83,7 +83,7 @@ function App() {
     },
   ]);
   const [expandedMockPortfolioId, setExpandedMockPortfolioId] = useState<string | null>(null);
-  const [mockPortfolioDetails] = useState<Map<string, PortfolioDetail>>(new Map([
+  const [mockPortfolioDetails, setMockPortfolioDetails] = useState<Map<string, PortfolioDetail>>(new Map([
     ['mock-1', {
       id: 'mock-1',
       clientName: 'John Doe',
@@ -307,6 +307,21 @@ function App() {
         holdingsCount: holdings.length,
         status: 'ACTIVE',
       };
+      
+      // Add holdings to mockPortfolioDetails
+      setMockPortfolioDetails(prev => {
+        const newMap = new Map(prev);
+        newMap.set(newPortfolio.id, {
+          id: newPortfolio.id,
+          clientName,
+          accountNumber,
+          totalValue: newPortfolio.totalValue,
+          cashBalance: initialCash,
+          status: 'ACTIVE',
+          holdings,
+        });
+        return newMap;
+      });
       
       setMockPortfolios(prev => [...prev, newPortfolio]);
       setMockDemoStatus(`✅ Successfully created portfolio for ${clientName} with ${numHoldings} holdings!`);

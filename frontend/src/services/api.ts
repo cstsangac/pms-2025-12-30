@@ -3,7 +3,7 @@ import axios from 'axios';
 // Toggle between mock and real API
 const USE_MOCK_DATA = false;
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
