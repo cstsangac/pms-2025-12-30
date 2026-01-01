@@ -276,21 +276,6 @@ docker exec -it pms-kafka kafka-topics.sh --list --bootstrap-server localhost:90
 
 ---
 
-## 2-Year Gap Talking Points
-
-✅ **Positive framing:**
-- "Took time for family/personal reasons - now fully committed to returning"
-- "Used the time to learn modern tech stack (Spring Boot 3, Kafka, React)"
-- "Built this project from scratch to demonstrate current skills"
-- "Stayed current by following industry trends and hands-on learning"
-
-❌ **Avoid:**
-- Being defensive or overly detailed about the gap
-- Saying "I forgot everything" or "I'm rusty"
-- Making excuses
-
----
-
 ## Questions to Ask Interviewer
 
 **Technical:**
