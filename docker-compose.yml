@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   # MongoDB for Portfolio Service
   mongodb-portfolio:
@@ -11,6 +17,7 @@ services:
       - mongodb-portfolio-data:/data/db
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/portfolio_db --quiet
       interval: 10s
@@ -29,6 +36,7 @@ services:
       - mongodb-transaction-data:/data/db
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/transaction_db --quiet
       interval: 10s
@@ -45,6 +53,7 @@ services:
       - redis-data:/data
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -62,6 +71,7 @@ services:
       - "2181:2181"
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: nc -z localhost 2181 || exit 1
       interval: 10s
@@ -85,8 +95,11 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: kafka-broker-api-versions --bootstrap-server localhost:9092
       interval: 10s
@@ -114,6 +127,7 @@ services:
         condition: service_healthy
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/api/portfolio/actuator/health"]
       interval: 30s
@@ -138,6 +152,7 @@ services:
         condition: service_healthy
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/api/transaction/actuator/health"]
       interval: 30s
@@ -159,6 +174,7 @@ services:
         condition: service_healthy
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/api/notification/actuator/health"]
       interval: 30s
@@ -179,6 +195,7 @@ services:
       - notification-service
     networks:
       - pms-network
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s

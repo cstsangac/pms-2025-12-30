@@ -52,7 +52,8 @@ public class PortfolioService {
         return portfolioMapper.toResponse(saved);
     }
 
-    @Cacheable(value = "portfolios", key = "#id")
+    // Temporarily disabled caching to avoid Redis serialization issues
+    // @Cacheable(value = "portfolios", key = "#id")
     public PortfolioDTO.Response getPortfolioById(String id) {
         log.debug("Fetching portfolio with ID: {}", id);
         Portfolio portfolio = portfolioRepository.findById(id)

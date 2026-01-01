@@ -23,6 +23,7 @@ public interface PortfolioMapper {
 
     PortfolioDTO.Response toResponse(Portfolio portfolio);
 
+    @Mapping(target = "holdingsCount", expression = "java(getHoldingsCount(portfolio))")
     PortfolioDTO.Summary toSummary(Portfolio portfolio);
 
     List<PortfolioDTO.Response> toResponseList(List<Portfolio> portfolios);

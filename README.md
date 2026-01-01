@@ -27,7 +27,6 @@ This Portfolio Management System is a production-ready demonstration of modern m
 - **RESTful API Design** with comprehensive OpenAPI documentation
 - **Distributed Caching** using Redis
 - **Document Database** integration with MongoDB
-- **Test-Driven Development** with 80%+ code coverage
 - **Cloud-Native Patterns** (Circuit Breaker, API Gateway, Service Discovery)
 - **Modern Frontend** with React and TypeScript
 - **CI/CD Pipeline** with GitHub Actions
