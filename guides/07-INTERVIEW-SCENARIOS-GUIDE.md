@@ -449,10 +449,11 @@ PostgreSQL requires more effort (Citus extension, manual partitioning)"
 - Mature tooling needed (BI tools, reporting)
 
 **But for portfolio management:**
-- Holdings data is self-contained
+- Holdings data is self-contained (document model fits naturally)
 - Eventual consistency acceptable
-- Read-heavy workload (caching helps)
-- Schema evolution expected
+- Balanced read/write workload (MongoDB handles both well)
+- Schema evolution expected (different portfolio types)
+- Better write performance than PostgreSQL (less overhead)
 
 → MongoDB is better fit"
 
