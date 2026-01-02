@@ -1,6 +1,6 @@
 # Portfolio Management System
 
-> **A microservices-based wealth management platform demonstrating enterprise Java development expertise**
+> **A microservices-based wealth management platform with 4 services communicating via Kafka events, using MongoDB for persistence, Redis for caching, and Spring Cloud Gateway for API routing.**
 
 [![CI/CD Pipeline](https://github.com/yourusername/pms/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/yourusername/pms/actions/workflows/ci-cd.yml)
 [![Java](https://img.shields.io/badge/Java-17-orange)](https://openjdk.java.net/projects/jdk/17/)
@@ -21,16 +21,18 @@
 
 ## 🎯 Overview
 
-This Portfolio Management System is a production-ready demonstration of modern microservices architecture designed for wealth management. It showcases enterprise-level Java development skills including:
+**This is a portfolio project demonstrating practical knowledge of enterprise Java and microservices architecture.**
 
-- **Event-Driven Architecture** with Kafka
-- **RESTful API Design** with comprehensive OpenAPI documentation
-- **Distributed Caching** using Redis
-- **Document Database** integration with MongoDB
-- **Cloud-Native Patterns** (Circuit Breaker, API Gateway, Service Discovery)
-- **Modern Frontend** with React and TypeScript
-- **CI/CD Pipeline** with GitHub Actions
-- **Containerization** with Docker
+Built to showcase hands-on experience with:
+
+- **Event-Driven Architecture** - Kafka-based inter-service communication with topic partitioning and consumer groups
+- **RESTful API Design** - OpenAPI 3.0 documented endpoints with proper HTTP semantics
+- **Distributed Caching** - Redis integration with cache-aside pattern and serialization handling
+- **Document Database** - MongoDB with aggregation pipelines and embedded documents
+- **API Gateway Pattern** - Spring Cloud Gateway with routing, CORS, and request filtering
+- **Modern Frontend** - React 18 + TypeScript with component composition and state management
+- **Containerization** - Multi-container Docker Compose orchestration with 10 services
+- **Testing Strategy** - Unit tests (JUnit 5 + Mockito), integration tests, and E2E tests (Playwright)
 
 ## 🏗️ Architecture
 
@@ -138,36 +140,40 @@ Key Data Flow:
 - **GitHub Actions** - CI/CD pipeline
 - **Maven** - Build automation
 
-## ✨ Features
+## ✨ Implemented Capabilities
 
-### Portfolio Management
-- ✅ Create and manage client portfolios
-- ✅ Track holdings with real-time valuations
-- ✅ Calculate unrealized gains/losses
-- ✅ Multi-currency support
-- ✅ Portfolio status management
+### Core Functionality
+- **Portfolio CRUD Operations** - Create clients, manage holdings, calculate portfolio value
+- **Transaction Processing** - Buy/Sell orders with event-driven workflow (CREATED → PROCESSING → COMPLETED)
+- **Kafka Event Flow** - Asynchronous communication between transaction and portfolio services
+- **Redis Caching** - Portfolio data cached with type-aware Jackson serialization
+- **MongoDB Persistence** - Separate databases for portfolio and transaction domains
+- **API Gateway Routing** - Centralized entry point with path-based routing to microservices
+- **Interactive Frontend** - React dashboard with expandable holdings, random data generation, system status monitoring
 
-### Transaction Processing
-- ✅ Buy/Sell transaction execution
-- ✅ Automatic transaction processing
-- ✅ Commission calculation
-- ✅ Transaction history and audit trail
-- ✅ Event-driven updates
+### Technical Implementation Highlights
+- RESTful APIs with OpenAPI 3.0 Swagger documentation (accessible at `/swagger-ui.html`)
+- Redis cache-aside pattern with `GenericJackson2JsonRedisSerializer` for complex object serialization
+- Kafka consumer groups with offset management and JSON deserialization
+- Spring Boot Actuator health endpoints for service monitoring
+- Docker Compose multi-container orchestration (10 containers: 4 Java services + MongoDB × 2 + Redis + Kafka + Zookeeper + Frontend)
+- Jackson JSR310 module for Java 8 date/time serialization
+- CORS configuration for frontend-backend communication
 
-### Notifications
-- ✅ Real-time event consumption
-- ✅ Portfolio change notifications
-- ✅ Transaction status updates
-- ✅ Extensible notification channels
+### Architecture Patterns Demonstrated
+- **Event-Driven Architecture** - Transaction events trigger portfolio updates asynchronously
+- **Database per Service** - Each microservice owns its data (portfolio_db, transaction_db)
+- **API Gateway Pattern** - Single entry point with Spring Cloud Gateway
+- **Caching Strategy** - Cache-aside with Redis to reduce database load
+- **Service Isolation** - Independent deployment and scaling of microservices
 
-### Technical Features
-- ✅ RESTful APIs with OpenAPI 3.0 documentation
-- ✅ Redis caching for improved performance
-- ✅ Kafka event streaming for async communication
-- ✅ Circuit breaker pattern for resilience
-- ✅ Comprehensive error handling
-- ✅ Structured logging
-- ✅ Health checks and monitoring
+### Future Enhancements (Not Implemented)
+- Real-time market data integration for live price updates
+- Circuit breaker pattern with Resilience4j for fault tolerance
+- Distributed tracing with Spring Cloud Sleuth/Zipkin
+- Multi-currency support with exchange rate APIs
+- WebSocket connections for real-time frontend updates
+- Comprehensive audit logging with transaction history
 
 ## 🚀 Getting Started
 
